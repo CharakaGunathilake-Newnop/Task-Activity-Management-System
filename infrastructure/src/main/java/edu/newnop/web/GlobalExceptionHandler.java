@@ -6,6 +6,7 @@ import edu.newnop.infrastructure.adapters.in.web.exceptions.InvalidUserRoleExcep
 import edu.newnop.infrastructure.adapters.in.web.exceptions.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -54,6 +55,17 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiError<Void>> handleBadCredentialsError(BadCredentialsException ex){
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiError.error(
+                        "Bad Credentials",
+                        "Invalid Password please try again",
+                        null
+                ));
+    }
+
     @ExceptionHandler(EmailNotVerifiedException.class)
     public ResponseEntity<ApiError<Void>> handleEmailNotVerifiedError(EmailNotVerifiedException ex){
         return ResponseEntity
@@ -64,6 +76,7 @@ public class GlobalExceptionHandler {
                         null
                 ));
     }
+
 
     // Handles Business/Runtime exceptions
     @ExceptionHandler(RuntimeException.class)
