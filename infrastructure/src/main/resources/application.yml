@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update # Use 'validate' because Flyway handles the schema
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION}
+#  flyway:
+#    enabled: true
+#    baseline-on-migrate: true
+#    # Tells Flyway to look into every module's resources for scripts
+#    locations:
+#      - classpath:db/migration/identity
+#      - classpath:db/migration/task
+#      - classpath:db/migration/activity
+#      - classpath:db/migration/admin
