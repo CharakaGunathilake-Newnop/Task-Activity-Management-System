@@ -4,7 +4,7 @@ public interface LoginUseCase {
     LoginResult login(LoginCommand command);
 
     record LoginCommand(
-            String username,
+            String email,
             String password
     ) {
     }

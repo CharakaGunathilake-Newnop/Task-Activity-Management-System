@@ -1,6 +1,7 @@
 package edu.newnop.web;
 
 import edu.newnop.common.ApiError;
+import edu.newnop.infrastructure.adapters.in.web.exceptions.EmailNotVerifiedException;
 import edu.newnop.infrastructure.adapters.in.web.exceptions.InvalidUserRoleException;
 import edu.newnop.infrastructure.adapters.in.web.exceptions.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
@@ -48,6 +49,17 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiError.error(
                         "Invalid User Role",
+                        ex.getMessage(),
+                        null
+                ));
+    }
+
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ApiError<Void>> handleEmailNotVerifiedError(EmailNotVerifiedException ex){
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiError.error(
+                        "Email not verified",
                         ex.getMessage(),
                         null
                 ));

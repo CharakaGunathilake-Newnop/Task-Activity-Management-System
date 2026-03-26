@@ -36,7 +36,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<LoginUseCase.LoginResult> login(@RequestBody LoginRequest request) {
+    public ApiResponse<LoginUseCase.LoginResult> login(@RequestBody @Valid LoginRequest request) {
         return ApiResponse.success(
                 HttpStatus.OK.value(),
                 "Login successful",
