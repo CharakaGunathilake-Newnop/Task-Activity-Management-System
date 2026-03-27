@@ -1,4 +1,4 @@
-package edu.newnop.application.service;
+package edu.newnop.infrastructure.adapters.out.security;
 
 import edu.newnop.application.port.out.PasswordEncoderPort;
 import lombok.RequiredArgsConstructor;
