@@ -3,6 +3,7 @@ package edu.newnop.web;
 import edu.newnop.common.ApiError;
 import edu.newnop.infrastructure.adapters.in.web.exceptions.EmailNotVerifiedException;
 import edu.newnop.infrastructure.adapters.in.web.exceptions.InvalidUserRoleException;
+import edu.newnop.infrastructure.adapters.in.web.exceptions.OtpVerificationFailedException;
 import edu.newnop.infrastructure.adapters.in.web.exceptions.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,7 +35,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiError<Void>> handleUserAlreadyExistError(UserAlreadyExistsException ex){
+    public ResponseEntity<ApiError<Void>> handleUserAlreadyExistError(UserAlreadyExistsException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ApiError.error(
@@ -45,7 +46,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidUserRoleException.class)
-    public ResponseEntity<ApiError<Void>> handleInvalidUserRoleError(InvalidUserRoleException ex){
+    public ResponseEntity<ApiError<Void>> handleInvalidUserRoleError(InvalidUserRoleException ex) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiError.error(
@@ -56,7 +57,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiError<Void>> handleBadCredentialsError(BadCredentialsException ex){
+    public ResponseEntity<ApiError<Void>> handleBadCredentialsError(BadCredentialsException ex) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiError.error(
@@ -67,11 +68,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EmailNotVerifiedException.class)
-    public ResponseEntity<ApiError<Void>> handleEmailNotVerifiedError(EmailNotVerifiedException ex){
+    public ResponseEntity<ApiError<Void>> handleEmailNotVerifiedError(EmailNotVerifiedException ex) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiError.error(
                         "Email not verified",
+                        ex.getMessage(),
+                        null
+                ));
+    }
+
+    // Handles OTP verification exceptions
+    @ExceptionHandler(OtpVerificationFailedException.class)
+    public ResponseEntity<ApiError<Void>> handleOtpVerificationFailedError(OtpVerificationFailedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiError.error(
+                        "Verification Failed",
                         ex.getMessage(),
                         null
                 ));
