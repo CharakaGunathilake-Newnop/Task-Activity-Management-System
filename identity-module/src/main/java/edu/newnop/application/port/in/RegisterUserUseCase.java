@@ -8,11 +8,38 @@ public interface RegisterUserUseCase {
             String email,
             String password,
             String role
-    ) {}
+    ) {
+    }
 
-    record RegistrationResult(
+    record RegistrationResult<T>(
             Long id,
             String email,
-            String OtpId
-    ) {}
+            T data
+    ) {
+    }
+
+    SendMailResult sendVerificationMail(SendMailCommand<?> command);
+
+    record SendMailCommand<T>(
+            String receiverEmail,
+            String receiverName,
+            String subject,
+            String message,
+            T data
+    ) {
+    }
+
+    record SendMailResult(
+            String message
+    ) {
+    }
+
+
+
+    boolean verifyEmail(VerifyEmailCommand command);
+
+    record VerifyEmailCommand(
+            String otpId,
+            String otpCode
+    ){}
 }
