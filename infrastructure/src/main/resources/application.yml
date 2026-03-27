@@ -7,17 +7,33 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # Use 'validate' because Flyway handles the schema
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD} # Use an App Password, not your real password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 application:
   security:
     jwt:
       secret-key: ${JWT_SECRET}
       expiration: ${JWT_EXPIRATION}
+  notification:
+    sender:
+      mail: ${MAIL_USERNAME} # Best practice: match your auth email
 #  flyway:
 #    enabled: true
 #    baseline-on-migrate: true
