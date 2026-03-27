@@ -29,10 +29,18 @@ services:
       postgres-db:
         condition: service_healthy # Only starts app once DB is ready
     environment:
-      # These override the values in your application.yml
+      # Database connection
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+
+      # JWT Configuration
+      APPLICATION_SECURITY_JWT_SECRET_KEY: ${JWT_SECRET}
+      APPLICATION_SECURITY_JWT_EXPIRATION: ${JWT_EXPIRATION}
+
+      # SMTP Configuration
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
       # Profiles can help manage different settings
       SPRING_PROFILES_ACTIVE: docker
     restart: always
