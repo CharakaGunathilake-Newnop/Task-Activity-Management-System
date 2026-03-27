@@ -3,15 +3,15 @@ package edu.newnop.infrastructure.adapters.out.persistence;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
 @Getter
+@Setter
+@ToString
 @MappedSuperclass
 @NoArgsConstructor
 @AllArgsConstructor
