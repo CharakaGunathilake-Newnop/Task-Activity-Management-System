@@ -28,16 +28,23 @@ public class UserMapper {
 
     // Convert Domain User -> JPA Entity
     public static UserEntity toEntity(User user) {
-        return UserEntity.builder()
-                .name(user.getName())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .password(user.getPassword())
-                .userStatus(user.getUserStatus())
-                .role(user.getRole())
-                .isEnabled(user.isEnabled())
-                .isVerified(user.isVerified())
-                .lastLoginInAt(user.getLastLoginAt())
-                .build();
+        UserEntity userEntity = new UserEntity();
+
+        userEntity.setId(user.getId());
+        userEntity.setVersion(user.getVersion());
+        userEntity.setName(user.getName());
+        userEntity.setEmail(user.getEmail());
+        userEntity.setPassword(user.getPassword());
+        userEntity.setUserStatus(user.getUserStatus());
+        userEntity.setRole(user.getRole());
+        userEntity.setEnabled(user.isEnabled());
+        userEntity.setVerified(user.isVerified());
+        userEntity.setCreatedAt(user.getCreatedAt());
+        userEntity.setLastUpdate(user.getLastUpdate());
+
+        // Mapping the domain 'lastLoginAt' to entity 'lastLoginInAt'
+        userEntity.setLastLoginInAt(user.getLastLoginAt());
+
+        return userEntity;
     }
 }

@@ -3,16 +3,13 @@ package edu.newnop.infrastructure.adapters.out.persistence;
 import edu.newnop.domain.model.UserRole;
 import edu.newnop.domain.model.UserStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
 
+@EqualsAndHashCode(callSuper=false)
 @Data
 @Entity
-@Builder
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
