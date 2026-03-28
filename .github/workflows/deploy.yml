@@ -77,15 +77,20 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Exit immediately if a command fails
             set -e
             
-            # 1. Login to ECR
+            # 1. Move to the directory where the files were copied
+            cd /home/ec2-user
+            
+            # 2. Debug: List files
+            ls -la docker-compose.yml .env
+            
+            # 3. Login to ECR
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | sudo docker login --username AWS --password-stdin 836356811473.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
             
-            # 2. Pull the latest images and start services
-            sudo /usr/local/bin/docker-compose pull
-            sudo /usr/local/bin/docker-compose up -d
+            # 4. Pull and Start using the EXPLICIT file path
+            sudo /usr/local/bin/docker-compose -f /home/ec2-user/docker-compose.yml pull
+            sudo /usr/local/bin/docker-compose -f /home/ec2-user/docker-compose.yml up -d
             
-            # 3. Clean up
+            # 5. Clean up
             sudo docker image prune -f
