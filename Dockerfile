@@ -29,7 +29,6 @@ RUN addgroup --system spring && adduser --system spring --ingroup spring
 USER spring:spring
 
 # Copy the "fat JAR" from the infrastructure module's target folder
-# Note: Adjust the path/name if your artifact name differs
 COPY --from=build /app/infrastructure/target/*.jar app.jar
 
 # Expose the standard Spring Boot port
