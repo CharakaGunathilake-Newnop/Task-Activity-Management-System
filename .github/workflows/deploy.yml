@@ -77,12 +77,15 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Login to ECR on the EC2 host
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin 836356811473.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+            # Exit immediately if a command fails
+            set -e
+            
+            # 1. Login to ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | sudo docker login --username AWS --password-stdin 836356811473.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
             
             # 2. Pull the latest images and start services
-            docker-compose pull
-            docker-compose up -d
+            sudo /usr/local/bin/docker-compose pull
+            sudo /usr/local/bin/docker-compose up -d
             
-            # 3. Clean up unused images to save disk space
-            docker image prune -f
+            # 3. Clean up
+            sudo docker image prune -f
