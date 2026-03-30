@@ -10,8 +10,7 @@ public interface CreateTaskUseCase {
             String description,
             String status,
             String priority,
-            Date dueDate,
-            String assignedUserId
+            Date dueDate
     ) {
     }
 
