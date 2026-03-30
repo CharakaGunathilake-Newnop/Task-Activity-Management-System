@@ -7,7 +7,11 @@ public class UserMapper {
 
     // Convert JPA Entity -> Domain User
     public static User toDomain(UserEntity entity) {
-        User user =  User.builder()
+        if (entity == null) {
+            return null;
+        }
+
+        User user = User.builder()
                 .name(entity.getName())
                 .email(entity.getEmail())
                 .password(entity.getPassword())
