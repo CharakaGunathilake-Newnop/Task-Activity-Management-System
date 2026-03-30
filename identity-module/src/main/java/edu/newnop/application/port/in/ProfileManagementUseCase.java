@@ -22,6 +22,7 @@ public interface ProfileManagementUseCase {
     UpdateProfileResult updateProfile(UpdateProfileCommand command);
 
     record UpdateProfileCommand(
+            String userId, // to support both email and name update, we need userId (current email) to identify the user
             String email,
             String name
     ) {
