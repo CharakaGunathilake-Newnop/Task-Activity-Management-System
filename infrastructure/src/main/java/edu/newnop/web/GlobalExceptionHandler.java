@@ -1,10 +1,7 @@
 package edu.newnop.web;
 
 import edu.newnop.common.ApiError;
-import edu.newnop.infrastructure.adapters.in.web.exceptions.EmailNotVerifiedException;
-import edu.newnop.infrastructure.adapters.in.web.exceptions.InvalidUserRoleException;
-import edu.newnop.infrastructure.adapters.in.web.exceptions.OtpVerificationFailedException;
-import edu.newnop.infrastructure.adapters.in.web.exceptions.UserAlreadyExistsException;
+import edu.newnop.infrastructure.adapters.in.web.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -102,6 +99,17 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    // Handles Email Service Unavailability
+    @ExceptionHandler(EmailServiceUnavailableException.class)
+    public ResponseEntity<ApiError<Void>> handleEmailServiceUnavailable(EmailServiceUnavailableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiError.error(
+                        "Service Unavailable",
+                        ex.getMessage(),
+                        null
+                ));
+    }
 
     // Handles Business/Runtime exceptions
     @ExceptionHandler(RuntimeException.class)
