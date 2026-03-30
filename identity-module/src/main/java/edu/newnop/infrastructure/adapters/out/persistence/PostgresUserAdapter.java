@@ -43,4 +43,9 @@ public class PostgresUserAdapter implements UserRepositoryPort {
     public boolean existsByUsername(String username) {
         return false;
     }
+
+    @Override
+    public void delete(User user) {
+        jpaRepository.delete(UserMapper.toEntity(user));
+    }
 }
