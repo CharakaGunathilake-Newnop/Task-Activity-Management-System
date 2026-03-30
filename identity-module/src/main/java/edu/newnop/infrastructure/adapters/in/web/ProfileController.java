@@ -6,6 +6,7 @@ import edu.newnop.common.ApiResponse;
 import edu.newnop.infrastructure.adapters.in.web.dto.DeleteAccountRequest;
 import edu.newnop.infrastructure.adapters.in.web.dto.ResetPasswordRequest;
 import edu.newnop.infrastructure.adapters.in.web.dto.UpdateProfileRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,7 +35,7 @@ public class ProfileController {
     }
 
     @PutMapping
-    public ApiResponse<ProfileManagementUseCase.UpdateProfileResult> updateProfile(Principal userPrincipal, @RequestBody UpdateProfileRequest request) {
+    public ApiResponse<ProfileManagementUseCase.UpdateProfileResult> updateProfile(Principal userPrincipal, @RequestBody @Valid UpdateProfileRequest request) {
         return
                 ApiResponse.success(
                         200,
@@ -49,7 +50,7 @@ public class ProfileController {
     }
 
     @PatchMapping("/reset-password")
-    public ApiResponse<ProfileManagementUseCase.ChangePasswordResult> changePassword(Principal userPrincipal, @RequestBody ResetPasswordRequest request){
+    public ApiResponse<ProfileManagementUseCase.ChangePasswordResult> changePassword(Principal userPrincipal, @RequestBody @Valid ResetPasswordRequest request) {
         return ApiResponse.success(
                 200,
                 "Password changed successfully",
@@ -63,7 +64,7 @@ public class ProfileController {
 
 
     @DeleteMapping
-    public ApiResponse<DeleteAccountUseCase.DeleteAccountResult> deleteAccount(Principal userPrincipal, @RequestBody DeleteAccountRequest request) {
+    public ApiResponse<DeleteAccountUseCase.DeleteAccountResult> deleteAccount(Principal userPrincipal, @RequestBody @Valid DeleteAccountRequest request) {
         return ApiResponse.success(
                 200,
                 "Account deleted successfully",
