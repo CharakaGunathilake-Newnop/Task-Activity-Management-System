@@ -3,7 +3,7 @@ package edu.newnop.domain.model;
 import edu.newnop.common.model.BaseDomainEntity;
 import lombok.*;
 
-import java.time.Instant;
+import java.util.Date;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -15,6 +15,6 @@ public class Task extends BaseDomainEntity {
     private String description;
     private TaskStatus status;
     private TaskPriority priority;
-    private Instant dueDate;
+    private Date dueDate;
     private Long assignedUserId;
 }
