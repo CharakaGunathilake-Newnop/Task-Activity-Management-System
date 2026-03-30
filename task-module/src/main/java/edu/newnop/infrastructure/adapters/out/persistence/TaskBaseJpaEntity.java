@@ -15,7 +15,7 @@ import java.util.Objects;
 @MappedSuperclass
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class BaseJpaEntity implements Serializable {
+public abstract class TaskBaseJpaEntity implements Serializable {
 
     @Id
     @SequenceGenerator(name = "id_generator", sequenceName = "id_sequence", allocationSize = 1)
@@ -47,7 +47,7 @@ public abstract class BaseJpaEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BaseJpaEntity that)) return false;
+        if (!(o instanceof TaskBaseJpaEntity that)) return false;
         return id.equals(that.id) &&
                 version == that.version &&
                 Objects.equals(createdAt, that.createdAt);
