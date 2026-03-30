@@ -30,7 +30,8 @@ public class PostgresUserAdapter implements UserRepositoryPort {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return Optional.of(UserMapper.toDomain(jpaRepository.findByEmail(email)));
+        UserEntity entity = jpaRepository.findByEmail(email).orElse(null);
+        return Optional.ofNullable(UserMapper.toDomain(entity));
 
     }
 
