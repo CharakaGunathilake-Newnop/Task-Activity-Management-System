@@ -34,6 +34,7 @@ public class TaskMapper {
                 .title(entity.getTitle())
                 .description(entity.getDescription() != null ? entity.getDescription() : null)
                 .status(entity.getStatus() != null ? entity.getStatus() : null)
+                .priority(entity.getPriority() != null ? entity.getPriority() : null)
                 .dueDate(entity.getDueDate() != null ? entity.getDueDate() : null)
                 .assignedUserId(entity.getAssignedUserId())
                 .build();
