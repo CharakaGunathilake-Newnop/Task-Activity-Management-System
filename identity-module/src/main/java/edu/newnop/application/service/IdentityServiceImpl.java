@@ -48,11 +48,11 @@ public class IdentityServiceImpl implements IdentityService {
         String email = command.email().toLowerCase().trim();
         String password = command.password().trim();
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password));
-
         User user = userRepositoryPort.findByEmail(command.email())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found by email: " + email));
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password));
 
         if (!user.isVerified()) {
             throw new EmailNotVerifiedException("Please verify your email before logging in.");
