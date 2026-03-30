@@ -2,6 +2,7 @@ package edu.newnop.infrastructure.adapters.out.notification;
 
 import edu.newnop.application.port.out.IdentityNotificationPort;
 import edu.newnop.application.port.out.dto.NotificationRequest;
+import edu.newnop.infrastructure.adapters.in.web.exceptions.EmailServiceUnavailableException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +44,7 @@ public class SmtpEmailAdapter implements IdentityNotificationPort {
             return "Mail sent successfully to: " + receiver;
         } catch (Exception e) {
             log.error("Failed to send email to {}: {}", receiver, e.getMessage());
-            throw new RuntimeException("Email service unavailable. Please try again later.");
+            throw new EmailServiceUnavailableException("Email service unavailable. Please try again later.");
         }
     }
 }
