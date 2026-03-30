@@ -1,8 +1,6 @@
 package edu.newnop.application.service;
 
-import edu.newnop.application.port.in.LoginUseCase;
-import edu.newnop.application.port.in.RegisterUserUseCase;
-import edu.newnop.application.port.in.RequestOTPMailUseCase;
+import edu.newnop.application.port.in.*;
 import edu.newnop.application.port.out.IdentityNotificationPort;
 import edu.newnop.application.port.out.PasswordEncoderPort;
 import edu.newnop.application.port.out.UserRepositoryPort;
@@ -34,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class IdentityService implements RegisterUserUseCase, LoginUseCase, RequestOTPMailUseCase {
+public class IdentityService implements RegisterUserUseCase, LoginUseCase, RequestOTPMailUseCase, ProfileManagementUseCase, DeleteAccountUseCase {
     private final AuthenticationManager authenticationManager;
     private final UserRepositoryPort userRepositoryPort;
     private final PasswordEncoderPort passwordEncoderPort;
@@ -212,5 +210,25 @@ public class IdentityService implements RegisterUserUseCase, LoginUseCase, Reque
         user.setVerified(true);
 
         userRepositoryPort.save(user);
+    }
+
+    @Override
+    public GetProfileResult getProfile(GetProfileCommand command) {
+        return null;
+    }
+
+    @Override
+    public UpdateProfileResult updateProfile(UpdateProfileCommand command) {
+        return null;
+    }
+
+    @Override
+    public ChangePasswordResult changePassword(ChangePasswordCommand command) {
+        return null;
+    }
+
+    @Override
+    public DeleteAccountResult deleteAccount(DeleteAccountCommand command) {
+        return null;
     }
 }
