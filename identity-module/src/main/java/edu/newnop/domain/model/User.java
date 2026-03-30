@@ -38,7 +38,11 @@ public class User extends BaseDomainEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return !lastLoginAt.isBefore(Instant.now().minus(Duration.ofDays(30))) && !userStatus.equals(UserStatus.INACTIVE);
+        if (lastLoginAt == null) return !userStatus.equals(UserStatus.INACTIVE);
+
+        long daysSinceLogin = Duration.between(lastLoginAt, Instant.now()).toDays();
+
+        return daysSinceLogin <= 30 && !UserStatus.INACTIVE.equals(userStatus);
     }
 
     @Override
