@@ -18,7 +18,7 @@ public class RegisterRequest {
     @Size(min = 1, max = 50, message = "Name must be 1–50 characters")
     @Pattern(
             regexp = "^(?! )(?!.*  )[\\p{L} ]+(?<! )$",
-            message = "First name can contain only letters and single spaces, without leading, trailing, or repeated spaces"
+            message = "Name can contain only letters and single spaces, without leading, trailing, or repeated spaces"
     )
     private String name;
     @Email(message = "Email is invalid")
