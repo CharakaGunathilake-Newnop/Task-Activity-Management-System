@@ -3,7 +3,6 @@ package edu.newnop.infrastructure.adapters.out.security;
 import edu.newnop.domain.model.User;
 import edu.newnop.infrastructure.adapters.out.persistence.PostgresUserAdapter;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,11 +15,10 @@ public class CustomUserDetailService implements UserDetailsService {
     private final PostgresUserAdapter userRepository;
 
     @Override
-    @NullMarked
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         // Load user from database using email
         User user = userRepository.findByEmail(email).orElseThrow(
-                () -> new UsernameNotFoundException("User not found b y email: " + email)
+                () -> new UsernameNotFoundException("User not found by email: " + email)
         );
 
         // Convert your User entity to Spring Security's UserDetails
