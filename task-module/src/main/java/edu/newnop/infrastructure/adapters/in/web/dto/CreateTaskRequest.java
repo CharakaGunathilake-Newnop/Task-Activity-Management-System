@@ -26,9 +26,5 @@ public class CreateTaskRequest {
     private String description;
     private String status;
     private String priority;
-    @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}$",
-            message = "Due date must be in the format YYYY-MM-DD"
-    )
     private Date dueDate;
 }
