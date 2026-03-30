@@ -18,6 +18,7 @@ public class TaskMapper {
         entity.setTitle(task.getTitle());
         entity.setDescription(task.getDescription() != null ? task.getDescription() : null);
         entity.setStatus(task.getStatus() != null ? task.getStatus() : null);
+        entity.setPriority(task.getPriority() != null ? task.getPriority() : null);
         entity.setCreatedAt(task.getCreatedAt());
         entity.setLastUpdate(task.getLastUpdate());
         entity.setDueDate(task.getDueDate() != null ? task.getDueDate() : null);
