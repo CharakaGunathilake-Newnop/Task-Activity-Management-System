@@ -17,22 +17,23 @@ import java.util.function.Function;
 @Component
 public class JwtService {
 
-    private final String SECRET_KEY;
-
     @Value("${application.security.jwt.expiration}")
     private int expirationHours;
 
+    private final SecretKey signingKey;
     private final JwtParser jwtParser;
 
     public JwtService(@Value("${application.security.jwt.secret-key}") String secret) {
-        this.SECRET_KEY = secret;
-        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
-        this.jwtParser = Jwts.parser().verifyWith(key).build();
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+
+        this.jwtParser = Jwts.parser()
+                .verifyWith(this.signingKey)
+                .build();
     }
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return this.signingKey;
     }
 
     private Claims extractAllClaims(String token) {

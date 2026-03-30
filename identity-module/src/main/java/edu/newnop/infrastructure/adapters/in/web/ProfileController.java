@@ -9,7 +9,7 @@ import edu.newnop.infrastructure.adapters.in.web.dto.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.attribute.UserPrincipal;
+import java.security.Principal;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,7 +19,7 @@ public class ProfileController {
     private final DeleteAccountUseCase deleteAccountUseCase;
 
     @GetMapping("/me")
-    public ApiResponse<ProfileManagementUseCase.GetProfileResult> getProfile(UserPrincipal userPrincipal) {
+    public ApiResponse<ProfileManagementUseCase.GetProfileResult> getProfile(Principal userPrincipal) {
         return
                 ApiResponse.success(
                         200,
@@ -34,7 +34,7 @@ public class ProfileController {
     }
 
     @PutMapping
-    public ApiResponse<ProfileManagementUseCase.UpdateProfileResult> updateProfile(UserPrincipal userPrincipal, @RequestBody UpdateProfileRequest request) {
+    public ApiResponse<ProfileManagementUseCase.UpdateProfileResult> updateProfile(Principal userPrincipal, @RequestBody UpdateProfileRequest request) {
         return
                 ApiResponse.success(
                         200,
@@ -49,7 +49,7 @@ public class ProfileController {
     }
 
     @PatchMapping("/reset-password")
-    public ApiResponse<ProfileManagementUseCase.ChangePasswordResult> changePassword(UserPrincipal userPrincipal, @RequestBody ResetPasswordRequest request){
+    public ApiResponse<ProfileManagementUseCase.ChangePasswordResult> changePassword(Principal userPrincipal, @RequestBody ResetPasswordRequest request){
         return ApiResponse.success(
                 200,
                 "Password changed successfully",
@@ -63,7 +63,7 @@ public class ProfileController {
 
 
     @DeleteMapping
-    public ApiResponse<DeleteAccountUseCase.DeleteAccountResult> deleteAccount(UserPrincipal userPrincipal, @RequestBody DeleteAccountRequest request) {
+    public ApiResponse<DeleteAccountUseCase.DeleteAccountResult> deleteAccount(Principal userPrincipal, @RequestBody DeleteAccountRequest request) {
         return ApiResponse.success(
                 200,
                 "Account deleted successfully",
