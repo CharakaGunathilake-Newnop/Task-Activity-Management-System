@@ -40,6 +40,8 @@ public class IdentityServiceImpl implements IdentityService {
     private final JwtService jwtService;
     private final ConcurrentHashMap<String, Map<String, Object>> otpStorage = new ConcurrentHashMap<>();
 
+    private static final String OTP_KEY = "otpCode";
+
 
     @Override
     public LoginResult login(LoginCommand command) {
@@ -118,7 +120,7 @@ public class IdentityServiceImpl implements IdentityService {
         );
 
         final String otpId = generateAndStoreOtp(command.email());
-        final String otpCode = otpStorage.get(otpId).get("otpCode").toString();
+        final String otpCode = otpStorage.get(otpId).get(OTP_KEY).toString();
         return new RequestOTPMailResult(
                 otpId,
                 sendVerificationMail(
@@ -148,7 +150,7 @@ public class IdentityServiceImpl implements IdentityService {
         // Note: In a real app, you'd associate this with the user's email too.
         otpStorage.put(otpId, Map.of(
                 "email", email
-                , "otpCode", otpCode
+                , OTP_KEY, otpCode
                 , "issuedAt", Instant.now()
         ));
 
@@ -192,7 +194,7 @@ public class IdentityServiceImpl implements IdentityService {
             throw new OtpVerificationFailedException("Failed to verify your email due to Expired OTP provided");
         }
 
-        if (validCode.get("otpCode").equals(command.otpCode())) {
+        if (validCode.get(OTP_KEY).equals(command.otpCode())) {
             updateUserVerificationStatus(email);
             otpStorage.remove(command.otpId());
             return true;
@@ -214,21 +216,96 @@ public class IdentityServiceImpl implements IdentityService {
 
     @Override
     public GetProfileResult getProfile(GetProfileCommand command) {
-        return null;
+        String email = command.email();
+
+        User user = userRepositoryPort.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found by email: " + email));
+
+        return new GetProfileResult(
+                user.getName(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.isVerified(),
+                user.getCreatedAt()
+        );
     }
 
     @Override
     public UpdateProfileResult updateProfile(UpdateProfileCommand command) {
-        return null;
+        String userId = command.userId();
+
+        User user = userRepositoryPort.findByEmail(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found by email: " + userId));
+
+        // Update email if provided and different from current email
+        if (null != command.email() && !command.email().trim().isEmpty()) {
+            final String newEmail = command.email().trim();
+
+            if (!user.getEmail().equalsIgnoreCase(newEmail)) {
+
+                // If the email is being changed, we need to re-verify the new email
+                user.setVerified(false);
+                user.setEmail(newEmail);
+
+                // Generate and send OTP to the new email for verification
+                String otpId = generateAndStoreOtp(newEmail);
+                sendVerificationMail(
+                        new SendMailCommand<>(
+                                newEmail,
+                                user.getName().split(" ")[0],
+                                "Email Change Verification",
+                                "Your email change request is received. Please verify your new email using the OTP code provided here",
+                                Map.of("OTP code", otpStorage.get(otpId).get(OTP_KEY).toString())
+                        )
+                );
+            }
+        }
+
+        // Update name if provided
+        if (null != command.name() && !command.name().isEmpty()) user.setName(command.name());
+
+        User updatedUser = userRepositoryPort.save(user);
+
+        return new UpdateProfileResult(
+                updatedUser.getName(),
+                updatedUser.getEmail(),
+                updatedUser.getRole().name(),
+                updatedUser.isVerified(),
+                updatedUser.getCreatedAt()
+        );
     }
 
     @Override
     public ChangePasswordResult changePassword(ChangePasswordCommand command) {
-        return null;
+        String email = command.email();
+
+        User user = userRepositoryPort.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found by email: " + email));
+
+        if (!passwordEncoderPort.matches(command.oldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Old password is incorrect, please try again");
+        }
+
+        String encodedNewPassword = passwordEncoderPort.encode(command.newPassword());
+        user.setPassword(encodedNewPassword);
+        userRepositoryPort.save(user);
+
+        return new ChangePasswordResult("Password changed successfully");
     }
 
     @Override
     public DeleteAccountResult deleteAccount(DeleteAccountCommand command) {
-        return null;
+        String email = command.email();
+
+        User user = userRepositoryPort.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found by email: " + email));
+
+        if (!passwordEncoderPort.matches(command.password(), user.getPassword())) {
+            throw new IllegalArgumentException("Password is incorrect, please try again");
+        }
+
+        userRepositoryPort.delete(user);
+
+        return new DeleteAccountResult("Account deleted successfully");
     }
 }

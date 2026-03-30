@@ -16,4 +16,5 @@ public interface UserRepositoryPort {
 
     boolean existsByUsername(String username);
 
+    void delete(User user);
 }
