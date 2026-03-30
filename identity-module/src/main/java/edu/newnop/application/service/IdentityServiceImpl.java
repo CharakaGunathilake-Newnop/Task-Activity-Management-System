@@ -239,9 +239,15 @@ public class IdentityServiceImpl implements IdentityService {
 
         // Update email if provided and different from current email
         if (null != command.email() && !command.email().trim().isEmpty()) {
+
             final String newEmail = command.email().trim();
 
             if (!user.getEmail().equalsIgnoreCase(newEmail)) {
+
+                // Check if the new email is already taken by another user
+                if (userRepositoryPort.existsByEmail(newEmail)) {
+                    throw new UserAlreadyExistsException("Email is already in use by another account, please try a different email");
+                }
 
                 // If the email is being changed, we need to re-verify the new email
                 user.setVerified(false);
