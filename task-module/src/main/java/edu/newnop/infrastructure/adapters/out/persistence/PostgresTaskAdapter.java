@@ -23,14 +23,14 @@ public class PostgresTaskAdapter implements TaskRepositoryPort {
     }
 
     @Override
-    public Page<Task> findAllByUserId(Long aLong, PageRequest pageRequest) {
-        Page<TaskEntity> entities = jpaTaskRepository.findAllByUserId(aLong, pageRequest);
+    public Page<Task> findAllByUserId(Long assignedUserId, PageRequest pageRequest) {
+        Page<TaskEntity> entities = jpaTaskRepository.findAllByAssignedUserId(assignedUserId, pageRequest);
         return entities.map(TaskMapper::toDomain);
     }
 
     @Override
     public Optional<Task> findByIdAndUserId(Long taskId, Long UserId) {
-        Optional<TaskEntity> entityOpt = jpaTaskRepository.findByIdAndUserId(taskId, UserId);
+        Optional<TaskEntity> entityOpt = jpaTaskRepository.findByIdAndAssignedUserId(taskId, UserId);
         return entityOpt.map(TaskMapper::toDomain);
     }
 
@@ -42,7 +42,7 @@ public class PostgresTaskAdapter implements TaskRepositoryPort {
 
     @Override
     public Page<Task> findByUserIdAndSearchQuery(Long aLong, String searchQuery, PageRequest pageRequest) {
-        return jpaTaskRepository.findByUserIdAndSearchQuery(aLong, searchQuery, pageRequest)
+        return jpaTaskRepository.findByAssignedUserIdAndSearchQuery(aLong, searchQuery, pageRequest)
                 .map(TaskMapper::toDomain);
     }
 
