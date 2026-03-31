@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class EmailNotificationAdapter implements TaskNotificationPort {
 
     @Override
-    public void notifyTaskCreated(NotificationRequest<?> request) {
+    public void notifyTaskEvent(NotificationRequest<?> request) {
 
     }
 }
