@@ -20,4 +20,5 @@ public class TaskResponseDto {
     private TaskStatus status;
     private TaskPriority priority;
     private Date dueDate;
+    private Long assignedUserId;
 }
