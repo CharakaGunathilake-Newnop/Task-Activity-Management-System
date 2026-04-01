@@ -15,7 +15,7 @@ public interface JpaTaskRepository extends JpaRepository<TaskEntity, Long> {
     Optional<TaskEntity> findByIdAndAssignedUserId(Long taskId, Long assignedUserId);
 
     // Custom query to search by title, status, or priority for a specific user with pagination
-    @Query("SELECT t FROM tasks t WHERE t.assignedUserId = :userId AND " +
+    @Query("SELECT t FROM tasks t WHERE t.assignedUserId = :assignedUserId AND " +
             "(LOWER(t.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR " +
             "LOWER(t.status) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR " +
             "LOWER(t.priority) LIKE LOWER(CONCAT('%', :searchQuery, '%')))")
