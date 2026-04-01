@@ -1,7 +1,7 @@
 package edu.newnop.application.in;
 
 import edu.newnop.infrastructure.adapters.in.web.dto.TaskResponseDto;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
@@ -9,10 +9,7 @@ public interface GetTasksUseCase {
     GetTasksResult getPaginatedTasks(GetTasksCommand command);
 
     record GetTasksCommand(
-            int page,
-            int size,
-            String sortBy,
-            String sortDirection,
+            PageRequest pageRequest,
             String searchQuery,
             Long selectedUserId
     ) {

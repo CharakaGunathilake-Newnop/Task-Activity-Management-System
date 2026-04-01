@@ -10,13 +10,12 @@ import edu.newnop.infrastructure.adapters.in.web.dto.CreateTaskRequest;
 import edu.newnop.infrastructure.adapters.in.web.dto.UpdateTaskRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Objects;
 
 
 @RestController
@@ -58,10 +57,11 @@ public class TaskController {
                 "Tasks retrieved successfully",
                 getTasksUseCase.getPaginatedTasks(
                         new GetTasksUseCase.GetTasksCommand(
-                                pageable.getPageNumber(),
-                                pageable.getPageSize(),
-                                pageable.getSort().isSorted() ? pageable.getSort().toString() : "createdAt",
-                                pageable.getSort().isSorted() ? pageable.getSort().toString() : Sort.Direction.DESC.name(),
+                                PageRequest.of(
+                                        Math.max(0, pageable.getPageNumber() - 1),
+                                        pageable.getPageSize(),
+                                        pageable.getSort()
+                                ),
                                 search,
                                 selectedUserId
                         )
@@ -90,7 +90,7 @@ public class TaskController {
         );
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<UpdateTaskUseCase.UpdateTaskStatusResult> updateTaskStatus(
             @PathVariable Long id,
