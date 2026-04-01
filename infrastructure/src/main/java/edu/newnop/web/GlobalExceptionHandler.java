@@ -2,9 +2,12 @@ package edu.newnop.web;
 
 import edu.newnop.common.ApiError;
 import edu.newnop.infrastructure.adapters.in.web.exceptions.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -123,14 +127,40 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    // Handles Authentication exceptions
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError<Void>> handleAuthenticationErrors(AuthenticationException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiError.error(
+                        "Unauthorized",
+                        ex.getMessage(),
+                        null
+                ));
+    }
+
+    // Handles Access Denied exceptions
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError<Void>> handleAccessDeniedErrors(AccessDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiError.error(
+                        "Forbidden",
+                        ex.getMessage() + ": You do not have permission to access this resource.",
+                        null
+                ));
+    }
+
+
     // Handles Business/Runtime exceptions
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiError<Void>> handleRuntimeErrors(RuntimeException ex) {
+        log.error("Unexpected error occurred: ", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiError.error(
                         "Internal Server Error",
-                        ex.getMessage(),
+                        "An unexpected error occurred. Please try again later.",
                         null
 
                 ));
