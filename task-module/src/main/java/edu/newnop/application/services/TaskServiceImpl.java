@@ -11,6 +11,7 @@ import edu.newnop.infrastructure.adapters.in.web.dto.TaskResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +19,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -91,19 +91,22 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public GetTasksResult getPaginatedTasks(GetTasksCommand command) {
         // Validate and sanitize pagination parameters
-        final int page = command.page() <= 0 ? 0 : command.page() - 1; // Convert to 0-based index
-        int size = command.size() <= 0 ? 10 : Math.min(command.size(), 100); // Limit page size to a reasonable range
+        Pageable pageable = command.pageRequest();
+        PageRequest pageRequest = PageRequest.of(
+                Math.max(0, pageable.getPageNumber()), // Ensure page number is non-negative
+                pageable.getPageSize() < 0 ? 10 : Math.min(pageable.getPageSize(), 100), // Default page size to 10 and cap at 100
+                pageable.getSort().isSorted() ? pageable.getSort() : Sort.by(Sort.Direction.DESC, "createdAt") // Default sorting by createdAt desc
+        );
+
         final String searchQuery = command.searchQuery() != null ? command.searchQuery().trim() : "";
+
         final Long selectedUserId = command.selectedUserId();
 
         final AuthenticatedUser user = getUser();
 
         final List<String> userRoles = user.authorities().stream().map(GrantedAuthority::getAuthority).toList();
 
-        final long userId = userRoles.contains("ROLE_ADMIN") ? selectedUserId : user.userId(); // Admin can see all tasks, regular users only their own
-
-        Sort sort = Sort.by(Sort.Direction.valueOf(command.sortDirection()), command.sortBy());
-        PageRequest pageRequest = PageRequest.of(page, size, sort);
+        final Long userId = userRoles.contains("ROLE_ADMIN") ? selectedUserId : user.userId(); // Admin can see all tasks, regular users only their own
 
         Page<Task> tasks;
 
@@ -125,12 +128,13 @@ public class TaskServiceImpl implements TaskService {
                         .status(task.getStatus())
                         .priority(task.getPriority())
                         .dueDate(task.getDueDate())
+                        .assignedUserId(task.getAssignedUserId())
                         .build()
-        ).collect(Collectors.toList());
+        ).toList();
 
         return new GetTasksResult(
                 tasksList,
-                tasks.getNumber(),
+                tasks.getNumber() == 0 ? 1 : tasks.getNumber() + 1, // Convert to 1-based page number for client
                 tasks.getSize(),
                 tasks.getTotalElements(),
                 tasks.getTotalPages()
