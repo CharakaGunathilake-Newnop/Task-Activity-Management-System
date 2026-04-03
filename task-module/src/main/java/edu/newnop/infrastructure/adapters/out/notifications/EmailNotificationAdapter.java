@@ -1,8 +1,12 @@
 package edu.newnop.infrastructure.adapters.out.notifications;
 
+import edu.newnop.application.in.CreateTaskUseCase;
+import edu.newnop.application.in.DeleteTaskUseCase;
+import edu.newnop.application.in.UpdateTaskUseCase;
 import edu.newnop.application.out.TaskNotificationPort;
 import edu.newnop.application.out.dto.NotificationRequest;
 import edu.newnop.infrastructure.adapters.in.web.dto.TaskResponseDto;
+import edu.newnop.infrastructure.adapters.in.web.dto.UpdateTaskRequest;
 import edu.newnop.infrastructure.adapters.out.notifications.exceptions.EmailServiceUnavailableException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +33,8 @@ public class EmailNotificationAdapter implements TaskNotificationPort {
         final String receiverName = notificationRequest.getReceiverName().trim();
 
         // Use \n for newlines and \t for tabs
-        final StringFormattedMessage formattedData = new StringFormattedMessage("Task\n\t ID: %s\n\tTitle: %s\n\tDescription: %s",
-                ((TaskResponseDto) data).getId(),
-                ((TaskResponseDto) data).getTitle(),
-                ((TaskResponseDto) data).getDescription()
-        );
+        final StringFormattedMessage formattedData = formatData(data);
+
         final String body = "Hi " + receiverName + ",\n\n" +
                 notificationRequest.getMessage() + "\n\t" +
                 formattedData;
@@ -53,4 +54,51 @@ public class EmailNotificationAdapter implements TaskNotificationPort {
             throw new EmailServiceUnavailableException("Email service unavailable. Please try again later.");
         }
     }
+
+    private StringFormattedMessage formatData(Object data) {
+        final String message = "\nTask\n\t ID: %s\n\tTitle: %s\n\tDescription: %s \n\tStatus: %s\n\tPriority: %s\n\tDue Date: %s";
+        return switch (data) {
+            case TaskResponseDto task -> new StringFormattedMessage(message,
+                    task.getId(),
+                    task.getTitle(),
+                    task.getDescription(),
+                    task.getStatus(),
+                    task.getPriority(),
+                    task.getDueDate()
+            );
+
+            case CreateTaskUseCase.CreateTaskResult task -> new StringFormattedMessage(message,
+                    task.id(),
+                    task.title(),
+                    task.description(),
+                    task.status(),
+                    task.priority(),
+                    task.dueDate()
+            );
+
+            case UpdateTaskUseCase.UpdateTaskResult task -> new StringFormattedMessage(message,
+                    task.taskId(),
+                    task.title(),
+                    task.description(),
+                    task.status(),
+                    task.priority(),
+                    task.dueDate()
+            );
+
+            case UpdateTaskUseCase.UpdateTaskStatusResult task -> new StringFormattedMessage(
+                    "\nTask\n\t ID: %s\n\tStatus: %s",
+                    task.taskId(),
+                    task.status()
+            );
+
+            case DeleteTaskUseCase.DeleteTaskResult task -> new StringFormattedMessage(
+                    "\n\tMessage: %s",
+                    task.message()
+            );
+
+            // Fallback for types you haven't handled yet
+            default -> new StringFormattedMessage("Update received for: %s", data.getClass().getSimpleName());
+        };
+    }
+
 }
