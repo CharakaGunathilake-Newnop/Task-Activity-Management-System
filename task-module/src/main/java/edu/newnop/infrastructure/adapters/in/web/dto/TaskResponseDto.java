@@ -21,4 +21,16 @@ public class TaskResponseDto {
     private TaskPriority priority;
     private Date dueDate;
     private Long assignedUserId;
+
+    public TaskResponseDto fromDomain(edu.newnop.domain.model.Task task) {
+        return TaskResponseDto.builder()
+                .id(task.getId())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .status(task.getStatus())
+                .priority(task.getPriority())
+                .dueDate(task.getDueDate())
+                .assignedUserId(task.getAssignedUserId())
+                .build();
+    }
 }
