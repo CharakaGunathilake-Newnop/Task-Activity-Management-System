@@ -30,4 +30,6 @@ public class TaskEntity extends TaskBaseJpaEntity {
     private Date dueDate;
     @Column(name = "assigned_user_id", nullable = false)
     private Long assignedUserId;
+    @Column(name = "notification_sent", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean notificationSent;
 }

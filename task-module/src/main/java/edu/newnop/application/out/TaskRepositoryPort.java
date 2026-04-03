@@ -4,6 +4,8 @@ import edu.newnop.domain.model.Task;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 public interface TaskRepositoryPort {
@@ -20,4 +22,6 @@ public interface TaskRepositoryPort {
     Page<Task> findAll(PageRequest pageRequest);
 
     Page<Task> findAllWithSearchQuery(String searchQuery, PageRequest pageRequest);
+
+    List<Task> findAllByDueDateIsBeforeAndNotificationSentFalse(Date threshold);
 }

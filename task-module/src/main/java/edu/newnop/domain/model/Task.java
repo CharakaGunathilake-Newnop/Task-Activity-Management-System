@@ -17,4 +17,5 @@ public class Task extends BaseDomainEntity {
     private TaskPriority priority;
     private Date dueDate;
     private Long assignedUserId;
+    private boolean notificationSent;
 }

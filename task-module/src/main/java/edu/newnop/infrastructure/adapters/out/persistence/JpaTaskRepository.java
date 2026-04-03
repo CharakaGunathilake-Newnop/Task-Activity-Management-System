@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -27,4 +29,6 @@ public interface JpaTaskRepository extends JpaRepository<TaskEntity, Long> {
             "LOWER(t.status) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR " +
             "LOWER(t.priority) LIKE LOWER(CONCAT('%', :searchQuery, '%'))")
     Page<TaskEntity> findAllWithSearchQuery(String searchQuery, PageRequest pageRequest);
+
+    List<TaskEntity> findAllByDueDateIsBeforeAndNotificationSentFalse(Date threshold);
 }

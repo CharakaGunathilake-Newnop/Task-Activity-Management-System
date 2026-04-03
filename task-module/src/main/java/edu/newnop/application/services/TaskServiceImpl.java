@@ -62,7 +62,8 @@ public class TaskServiceImpl implements TaskService {
                 status,
                 priority,
                 command.dueDate() != null ? command.dueDate() : null,
-                user.userId()
+                user.userId(),
+                false
         ));
 
         final CreateTaskResult createTaskResult = new CreateTaskResult(

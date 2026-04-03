@@ -23,6 +23,7 @@ public class TaskMapper {
         entity.setLastUpdate(task.getLastUpdate());
         entity.setDueDate(task.getDueDate() != null ? task.getDueDate() : null);
         entity.setAssignedUserId(task.getAssignedUserId());
+        entity.setNotificationSent(task.isNotificationSent());
 
         return entity;
     }
@@ -38,6 +39,7 @@ public class TaskMapper {
                 .priority(entity.getPriority() != null ? entity.getPriority() : null)
                 .dueDate(entity.getDueDate() != null ? entity.getDueDate() : null)
                 .assignedUserId(entity.getAssignedUserId())
+                .notificationSent(entity.isNotificationSent())
                 .build();
 
         task.setId(entity.getId());

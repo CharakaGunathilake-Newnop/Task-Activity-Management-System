@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -56,5 +58,11 @@ public class PostgresTaskAdapter implements TaskRepositoryPort {
     public Page<Task> findAllWithSearchQuery(String searchQuery, PageRequest pageRequest) {
         return jpaTaskRepository.findAllWithSearchQuery(searchQuery, pageRequest)
                 .map(TaskMapper::toDomain);
+    }
+
+    @Override
+    public List<Task> findAllByDueDateIsBeforeAndNotificationSentFalse(Date threshold) {
+        List<TaskEntity> entities = jpaTaskRepository.findAllByDueDateIsBeforeAndNotificationSentFalse(threshold);
+        return entities.stream().map(TaskMapper::toDomain).toList();
     }
 }
