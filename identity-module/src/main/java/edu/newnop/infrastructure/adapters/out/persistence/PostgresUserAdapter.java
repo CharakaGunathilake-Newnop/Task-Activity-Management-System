@@ -6,6 +6,7 @@ import edu.newnop.infrastructure.adapters.out.persistence.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -48,5 +49,17 @@ public class PostgresUserAdapter implements UserRepositoryPort {
     @Override
     public void delete(User user) {
         jpaRepository.delete(UserMapper.toEntity(user));
+    }
+
+    @Override
+    public Optional<User> findById(Long userId) {
+        UserEntity entity = jpaRepository.findById(userId).orElse(null);
+        return Optional.ofNullable(UserMapper.toDomain(entity));
+    }
+
+    @Override
+    public List<User> findAllByIdIn(Long[] userIds) {
+        List<UserEntity> entities = jpaRepository.findAllByIdIn(userIds);
+        return entities.stream().map(UserMapper::toDomain).toList();
     }
 }
