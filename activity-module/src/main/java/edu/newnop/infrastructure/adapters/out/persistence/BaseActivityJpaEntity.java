@@ -3,17 +3,19 @@ package edu.newnop.infrastructure.adapters.out.persistence;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
+@Getter
+@Setter
+@ToString
 @MappedSuperclass
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class BaseJPAEntity implements Serializable {
+public abstract class BaseActivityJpaEntity implements Serializable {
 
     @Id
     @SequenceGenerator(name = "id_generator", sequenceName = "id_sequence", allocationSize = 1)
@@ -45,7 +47,7 @@ public abstract class BaseJPAEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BaseJPAEntity that)) return false;
+        if (!(o instanceof BaseActivityJpaEntity that)) return false;
         return id.equals(that.id) &&
                 version == that.version &&
                 Objects.equals(createdAt, that.createdAt);
