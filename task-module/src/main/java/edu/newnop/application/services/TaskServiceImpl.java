@@ -3,12 +3,17 @@ package edu.newnop.application.services;
 import edu.newnop.application.out.TaskNotificationPort;
 import edu.newnop.application.out.TaskRepositoryPort;
 import edu.newnop.application.out.dto.NotificationRequest;
+import edu.newnop.common.event.EntityActivityEvent;
+import edu.newnop.common.model.ActionType;
 import edu.newnop.common.security.AuthenticatedUser;
 import edu.newnop.domain.model.Task;
 import edu.newnop.domain.model.TaskPriority;
 import edu.newnop.domain.model.TaskStatus;
 import edu.newnop.infrastructure.adapters.in.web.dto.TaskResponseDto;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,15 +23,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.*;
 
-
+@Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepositoryPort taskRepository;
     private final TaskNotificationPort taskNotification;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+    private static final String ENTITY_NAME = "TASK";
 
     @Override
     public CreateTaskResult createTask(CreateTaskCommand command) {
@@ -75,6 +85,14 @@ public class TaskServiceImpl implements TaskService {
                 task.getDueDate()
         );
 
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                task.getId(),
+                ActionType.CREATE,
+                String.format("User with email: %s created task: ID[%d[ at %tc", user.email(), task.getId(), ZonedDateTime.now()),
+                user.userId() // Actor ID
+        ));
+
         taskNotification.notifyTaskEvent(
                 new NotificationRequest<>(
                         user.email(),
@@ -107,12 +125,14 @@ public class TaskServiceImpl implements TaskService {
 
         final List<String> userRoles = user.authorities().stream().map(GrantedAuthority::getAuthority).toList();
 
-        final Long userId = userRoles.contains("ROLE_ADMIN") ? selectedUserId : user.userId(); // Admin can see all tasks, regular users only their own
+        final boolean isAdmin = userRoles.contains("ROLE_ADMIN");
+
+        final Long userId = isAdmin ? selectedUserId : user.userId(); // Admin can see all tasks, regular users only their own
 
         Page<Task> tasks;
 
         // If user is admin and no specific userId is provided, return all tasks with search query
-        if (userRoles.contains("ROLE_ADMIN") && null == selectedUserId) {
+        if (isAdmin && null == selectedUserId) {
             tasks = searchQuery.isEmpty() ? taskRepository.findAll(pageRequest) : taskRepository.findAllWithSearchQuery(searchQuery, pageRequest);
         } else if (searchQuery.isEmpty()) {
             tasks = taskRepository.findAllByUserId(userId, pageRequest);
@@ -132,6 +152,15 @@ public class TaskServiceImpl implements TaskService {
                         .assignedUserId(task.getAssignedUserId())
                         .build()
         ).toList();
+
+        log.info("{} ID [{}] with email: {} requested tasks page: [{}] {} {}",
+                isAdmin ? "ADMIN" : "USER",
+                user.userId(),
+                user.email(),
+                pageable.getPageNumber(),
+                searchQuery.isEmpty() ? "" : "search by [" + searchQuery + "]",
+                userId != null ? "of user with id: [" + userId + "]" : "of all users"
+        );
 
         return new GetTasksResult(
                 tasksList,
@@ -191,6 +220,14 @@ public class TaskServiceImpl implements TaskService {
                 updatedTask.getDueDate()
         );
 
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                task.getId(),
+                ActionType.UPDATE,
+                String.format("User with email: %s updated task: ID[%d] at %tc", user.email(), updatedTask.getId(), ZonedDateTime.now()),
+                user.userId() // Actor ID
+        ));
+
         // Notify user about task update
         taskNotification.notifyTaskEvent(
                 new NotificationRequest<>(
@@ -228,6 +265,14 @@ public class TaskServiceImpl implements TaskService {
                 updatedTask.getStatus().name()
         );
 
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                task.getId(),
+                ActionType.UPDATE,
+                String.format("User with email: %s updated status: [%s] task : ID[%d] at %tc", user.email(), updatedTask.getStatus().name(), task.getId(), ZonedDateTime.now()),
+                user.userId() // Actor ID
+        ));
+
         // Notify user about task status update
         taskNotification.notifyTaskEvent(
                 new NotificationRequest<>(
@@ -253,6 +298,14 @@ public class TaskServiceImpl implements TaskService {
         final DeleteTaskResult deleteTaskResult = new DeleteTaskResult(
                 task.getTitle()
         );
+
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                task.getId(),
+                ActionType.DELETE,
+                String.format("User with email: %s deleted task: %d at %tc", user.email(), task.getId(), ZonedDateTime.now()),
+                user.userId() // Actor ID
+        ));
 
         // Notify user about task deletion
         taskNotification.notifyTaskEvent(
