@@ -5,6 +5,8 @@ import edu.newnop.application.port.out.IdentityNotificationPort;
 import edu.newnop.application.port.out.PasswordEncoderPort;
 import edu.newnop.application.port.out.UserRepositoryPort;
 import edu.newnop.application.port.out.dto.NotificationRequest;
+import edu.newnop.common.event.EntityActivityEvent;
+import edu.newnop.common.model.ActionType;
 import edu.newnop.domain.model.User;
 import edu.newnop.domain.model.UserRole;
 import edu.newnop.domain.model.UserStatus;
@@ -16,14 +18,19 @@ import edu.newnop.infrastructure.adapters.out.security.JwtService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,9 +45,12 @@ public class IdentityServiceImpl implements IdentityService {
     private final PasswordEncoderPort passwordEncoderPort;
     private final IdentityNotificationPort notificationPort;
     private final JwtService jwtService;
+    private final AuthenticationEventPublisher authenticationEventPublisher;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final ConcurrentHashMap<String, Map<String, Object>> otpStorage = new ConcurrentHashMap<>();
 
     private static final String OTP_KEY = "otpCode";
+    private static final String ENTITY_NAME = "USERS";
 
 
     @Override
@@ -65,7 +75,15 @@ public class IdentityServiceImpl implements IdentityService {
         );
 
         user.setLastLoginAt(Instant.now());
-        userRepositoryPort.save(user);
+        final User savedUser = userRepositoryPort.save(user);
+
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                savedUser.getId(),
+                ActionType.LOGIN,
+                String.format("%s logged in with email: %s at %tc", savedUser.getRole().name(), savedUser.getEmail(), ZonedDateTime.now()),
+                user.getId()
+        ));
 
         return new LoginResult(
                 token,
@@ -102,6 +120,14 @@ public class IdentityServiceImpl implements IdentityService {
 
         User savedUser = userRepositoryPort.save(userToSave);
 
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                savedUser.getId(),
+                ActionType.REGISTER,
+                String.format("%s registered with email: %s at %tc", savedUser.getRole().name(), savedUser.getEmail(), ZonedDateTime.now()),
+                savedUser.getId()
+        ));
+
         return new RegisterUserUseCase.RegistrationResult<>(
                 savedUser.getId(),
                 savedUser.getEmail(),
@@ -121,6 +147,15 @@ public class IdentityServiceImpl implements IdentityService {
 
         final String otpId = generateAndStoreOtp(command.email());
         final String otpCode = otpStorage.get(otpId).get(OTP_KEY).toString();
+
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                user.getId(),
+                ActionType.REQUEST_OTP,
+                String.format("%s requested OTP with email: %s at %tc", user.getRole().name(), user.getEmail(), ZonedDateTime.now()),
+                user.getId()
+        ));
+
         return new RequestOTPMailResult(
                 otpId,
                 sendVerificationMail(
@@ -163,7 +198,6 @@ public class IdentityServiceImpl implements IdentityService {
     @Override
     public SendMailResult sendVerificationMail(SendMailCommand<?> command) {
 
-        log.debug("Sending mail");
         return new SendMailResult(
                 notificationPort.sendMail(
                         NotificationRequest.builder()
@@ -211,6 +245,14 @@ public class IdentityServiceImpl implements IdentityService {
         log.debug("User email is verified via OTP");
         user.setVerified(true);
 
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                user.getId(),
+                ActionType.VERIFY_EMAIL,
+                String.format("%s verified their email: %s at %tc", user.getRole().name(), user.getEmail(), ZonedDateTime.now()),
+                user.getId()
+        ));
+
         userRepositoryPort.save(user);
     }
 
@@ -220,6 +262,14 @@ public class IdentityServiceImpl implements IdentityService {
 
         User user = userRepositoryPort.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found by email: " + email));
+
+        boolean isAuthenticated = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).isAuthenticated();
+
+        log.info("Authenticate: {} -> {} requested their profile with email: {}",
+                isAuthenticated,
+                user.getRole().name(),
+                command.email()
+        );
 
         return new GetProfileResult(
                 user.getName(),
@@ -272,6 +322,14 @@ public class IdentityServiceImpl implements IdentityService {
 
         User updatedUser = userRepositoryPort.save(user);
 
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                updatedUser.getId(),
+                ActionType.UPDATE,
+                String.format("%s updated their profile at %tc", user.getRole().name(), ZonedDateTime.now()),
+                user.getId()
+        ));
+
         return new UpdateProfileResult(
                 updatedUser.getName(),
                 updatedUser.getEmail(),
@@ -294,7 +352,15 @@ public class IdentityServiceImpl implements IdentityService {
 
         String encodedNewPassword = passwordEncoderPort.encode(command.newPassword());
         user.setPassword(encodedNewPassword);
-        userRepositoryPort.save(user);
+        User savedUser = userRepositoryPort.save(user);
+
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                savedUser.getId(),
+                ActionType.CHANGE_PASSWORD,
+                String.format("%s changed their password with email: %s at %tc", savedUser.getRole().name(), savedUser.getEmail(), ZonedDateTime.now()),
+                user.getId()
+        ));
 
         return new ChangePasswordResult("Password changed successfully");
     }
@@ -309,6 +375,14 @@ public class IdentityServiceImpl implements IdentityService {
         if (!passwordEncoderPort.matches(command.password(), user.getPassword())) {
             throw new IllegalArgumentException("Password is incorrect, please try again");
         }
+
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                user.getId(),
+                ActionType.DELETE,
+                String.format("%s deleted their account with email: %s at %tc", user.getRole().name(), user.getEmail(), ZonedDateTime.now()),
+                user.getId()
+        ));
 
         userRepositoryPort.delete(user);
 
