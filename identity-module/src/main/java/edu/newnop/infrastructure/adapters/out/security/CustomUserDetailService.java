@@ -1,8 +1,8 @@
 package edu.newnop.infrastructure.adapters.out.security;
 
+import edu.newnop.application.port.out.UserRepositoryPort;
 import edu.newnop.common.security.AuthenticatedUser;
 import edu.newnop.domain.model.User;
-import edu.newnop.infrastructure.adapters.out.persistence.PostgresUserAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
-    private final PostgresUserAdapter userRepository;
+    private final UserRepositoryPort userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
