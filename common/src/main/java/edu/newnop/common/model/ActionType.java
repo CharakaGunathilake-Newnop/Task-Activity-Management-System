@@ -1,10 +1,11 @@
 package edu.newnop.common.model;
 
 public enum ActionType {
-    CREATE,
+    REGISTER,
     LOGIN,
+    CREATE,
     UPDATE,
     DELETE,
-    VERIFY,
-    DEACTIVATE
+    VERIFY_EMAIL,
+    REQUEST_OTP, CHANGE_PASSWORD, DEACTIVATE
 }
