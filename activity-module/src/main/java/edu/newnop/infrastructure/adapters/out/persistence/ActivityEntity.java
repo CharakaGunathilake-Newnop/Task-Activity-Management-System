@@ -6,8 +6,7 @@ import lombok.*;
 
 @EqualsAndHashCode(callSuper = false)
 @Data
-@Entity
-@Table(name = "activity_log")
+@Entity(name = "activity_log")
 @AllArgsConstructor
 @NoArgsConstructor
 public class ActivityEntity extends BaseActivityJpaEntity {

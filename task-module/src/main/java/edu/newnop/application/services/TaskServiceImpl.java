@@ -6,6 +6,7 @@ import edu.newnop.application.out.dto.NotificationRequest;
 import edu.newnop.common.event.EntityActivityEvent;
 import edu.newnop.common.model.ActionType;
 import edu.newnop.common.security.AuthenticatedUser;
+import edu.newnop.domain.dto.TaskAnalyticsSummary;
 import edu.newnop.domain.model.Task;
 import edu.newnop.domain.model.TaskPriority;
 import edu.newnop.domain.model.TaskStatus;
@@ -30,7 +31,7 @@ import java.util.*;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class TaskServiceImpl implements TaskService {
+public class TaskServiceImpl implements TaskService, TaskAdminService {
 
     private final TaskRepositoryPort taskRepository;
     private final TaskNotificationPort taskNotification;
@@ -319,6 +320,19 @@ public class TaskServiceImpl implements TaskService {
         );
 
         return deleteTaskResult;
+    }
+
+    @Override
+    public Map<String, Long> getTaskStatusBreakdown() {
+        final AuthenticatedUser user = getUser();
+        log.info("ADMIN ID [{}] with email: {} requested total task breakdown",
+                user.userId(),
+                user.email()
+        );
+
+        TaskAnalyticsSummary taskAnalyticsSummary = taskRepository.getTaskAnalyticsSummary();
+
+        return taskAnalyticsSummary.toMap();
     }
 
     private AuthenticatedUser getUser() {

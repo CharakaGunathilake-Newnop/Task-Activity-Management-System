@@ -1,5 +1,6 @@
 package edu.newnop.application.out;
 
+import edu.newnop.domain.dto.TaskAnalyticsSummary;
 import edu.newnop.domain.model.Task;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,4 +25,6 @@ public interface TaskRepositoryPort {
     Page<Task> findAllWithSearchQuery(String searchQuery, PageRequest pageRequest);
 
     List<Task> findAllByDueDateIsBeforeAndNotificationSentFalse(Date threshold);
+
+    TaskAnalyticsSummary getTaskAnalyticsSummary();
 }

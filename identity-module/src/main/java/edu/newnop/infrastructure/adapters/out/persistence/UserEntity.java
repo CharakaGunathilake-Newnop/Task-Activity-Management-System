@@ -9,8 +9,7 @@ import java.time.Instant;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-@Entity
-@Table(name = "users")
+@Entity(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserEntity extends BaseJPAEntity {

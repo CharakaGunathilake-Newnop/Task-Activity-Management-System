@@ -7,6 +7,9 @@ import edu.newnop.application.port.out.UserRepositoryPort;
 import edu.newnop.application.port.out.dto.NotificationRequest;
 import edu.newnop.common.event.EntityActivityEvent;
 import edu.newnop.common.model.ActionType;
+import edu.newnop.common.port.dto.UserResponseDto;
+import edu.newnop.common.security.AuthenticatedUser;
+import edu.newnop.domain.dto.UserAnalyticsSummary;
 import edu.newnop.domain.model.User;
 import edu.newnop.domain.model.UserRole;
 import edu.newnop.domain.model.UserStatus;
@@ -19,6 +22,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,17 +36,14 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class IdentityServiceImpl implements IdentityService {
+public class IdentityServiceImpl implements IdentityService, IdentityAdminService {
     private final AuthenticationManager authenticationManager;
     private final UserRepositoryPort userRepositoryPort;
     private final PasswordEncoderPort passwordEncoderPort;
@@ -387,5 +391,163 @@ public class IdentityServiceImpl implements IdentityService {
         userRepositoryPort.delete(user);
 
         return new DeleteAccountResult("Account deleted successfully");
+    }
+
+    @Override
+    public GetAllUsersResult getAllUsers(GetTotalUserCountCommand command) {
+        final AuthenticatedUser user = getUser();
+        // Validate and sanitize pagination parameters
+        final Pageable pageable = command.pageRequest();
+        final PageRequest pageRequest = PageRequest.of(
+                Math.max(0, pageable.getPageNumber()), // Ensure page number is non-negative
+                pageable.getPageSize() < 0 ? 10 : Math.min(pageable.getPageSize(), 100), // Default page size to 10 and cap at 100
+                pageable.getSort().isSorted() ? pageable.getSort() : Sort.by(Sort.Direction.DESC, "createdAt") // Default sorting by createdAt desc
+        );
+
+        final String searchQuery = command.searchQuery() != null ? command.searchQuery().trim() : "";
+
+        Page<User> users;
+
+        if (searchQuery.isEmpty()) {
+            users = userRepositoryPort.findAllUsersByRole(UserRole.USER, pageRequest);
+        } else {
+            users = userRepositoryPort.findAllUsersBySearch(searchQuery, pageRequest);
+        }
+
+        log.info("ADMIN: ID [{}] with email: {} requested users page: [{}] {} of all users",
+                user.userId(),
+                user.email(),
+                pageable.getPageNumber(),
+                searchQuery.isEmpty() ? "" : "search by [" + searchQuery + "]"
+        );
+
+        List<UserResponseDto> userResponseList = users.getContent().stream().map(u ->
+                UserResponseDto.builder()
+                        .id(u.getId())
+                        .name(u.getName())
+                        .email(u.getEmail())
+                        .userStatus(u.getUserStatus().name())
+                        .isEnabled(u.isEnabled())
+                        .isVerified(u.isVerified())
+                        .lastLoginAt(u.getLastLoginAt())
+                        .createdAt(u.getCreatedAt())
+                        .lastUpdatedAt(u.getLastUpdate())
+                        .build()
+        ).toList();
+
+        return new GetAllUsersResult(
+                userResponseList,
+                users.getNumber() == 0 ? 1 : users.getNumber() + 1, // Convert to 1-based page number for client
+                users.getSize(),
+                users.getTotalElements(),
+                users.getTotalPages()
+        );
+    }
+
+    @Override
+    public DeactivateUserResult deactivateUser(Long userId) {
+        User user = userRepositoryPort.findById(userId).orElseThrow(() ->
+                new UsernameNotFoundException("User not found by ID: " + userId));
+
+        if (!user.isEnabled()) {
+            throw new IllegalArgumentException("User is already deactivated");
+        }
+
+        user.setEnabled(false);
+        user.setUserStatus(UserStatus.INACTIVE);
+
+        User savedUser = userRepositoryPort.save(user);
+
+
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                user.getId(),
+                ActionType.DEACTIVATE,
+                String.format("ADMIN: ID[%s] deactivated the USER account with email: %s at %tc", getUser().userId(), savedUser.getEmail(), ZonedDateTime.now()),
+                user.getId()
+        ));
+
+        // Notify user
+        notificationPort.sendMail(
+                new NotificationRequest<>(
+                        user.getEmail(),
+                        user.getName().split(" ")[0],
+                        "Account deactivated by Admin",
+                        "Your account has been deactivated by Admin, please contact support",
+                        null
+                )
+        );
+
+
+        return new DeactivateUserResult(
+                UserResponseDto.builder()
+                        .id(savedUser.getId())
+                        .name(savedUser.getName())
+                        .email(savedUser.getEmail())
+                        .userStatus(savedUser.getUserStatus().name())
+                        .isEnabled(savedUser.isEnabled())
+                        .isVerified(savedUser.isVerified())
+                        .lastLoginAt(savedUser.getLastLoginAt())
+                        .createdAt(savedUser.getCreatedAt())
+                        .lastUpdatedAt(savedUser.getLastUpdate())
+                        .build()
+        );
+    }
+
+    @Override
+    public void deleteUser(Long userId) {
+
+        final User user = userRepositoryPort.findById(userId).orElseThrow(() ->
+                new UsernameNotFoundException("User not found by ID: " + userId));
+
+        userRepositoryPort.delete(user);
+
+        applicationEventPublisher.publishEvent(new EntityActivityEvent(
+                ENTITY_NAME,
+                user.getId(),
+                ActionType.DELETE,
+                String.format("ADMIN: ID[%s] deleted the USER account with email: %s at %tc", getUser().userId(), user.getEmail(), ZonedDateTime.now()),
+                user.getId()
+        ));
+
+        // Notify user
+        notificationPort.sendMail(
+                new NotificationRequest<>(
+                        user.getEmail(),
+                        user.getName().split(" ")[0],
+                        "Account deactivated by Admin",
+                        "Your account has been deleted by Admin, please contact support",
+                        null
+                )
+        );
+    }
+
+    @Override
+    public Map<String, Long> getUserBreakdown() {
+        final AuthenticatedUser user = getUser();
+        log.info("ADMIN ID [{}] with email: {} requested total user breakdown",
+                user.userId(),
+                user.email()
+        );
+
+        UserAnalyticsSummary userAnalyticsSummary = userRepositoryPort.getUserBreakDown();
+
+        return Map.of(
+                "totalUsers", userAnalyticsSummary.totalUsers(),
+                "enabledUsers", userAnalyticsSummary.enabledUsers(),
+                "verifiedUsers", userAnalyticsSummary.verifiedUsers(),
+                "activeUsers", userAnalyticsSummary.activeUsers(),
+                "inactiveUsers", userAnalyticsSummary.inactiveUsers(),
+                "adminUsers", userAnalyticsSummary.adminUsers(),
+                "generalUsers", userAnalyticsSummary.generalUsers()
+        );
+    }
+
+    private AuthenticatedUser getUser() {
+        try {
+            return (AuthenticatedUser) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
+        } catch (NullPointerException e) {
+            throw new UsernameNotFoundException("No authenticated user found in security context");
+        }
     }
 }
