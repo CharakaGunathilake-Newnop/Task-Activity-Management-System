@@ -1,6 +1,7 @@
 package edu.newnop.infrastructure.adapters.out.persistence;
 
 import edu.newnop.application.out.TaskRepositoryPort;
+import edu.newnop.domain.dto.TaskAnalyticsSummary;
 import edu.newnop.domain.model.Task;
 import edu.newnop.infrastructure.adapters.out.mapper.TaskMapper;
 import lombok.RequiredArgsConstructor;
@@ -64,5 +65,10 @@ public class PostgresTaskAdapter implements TaskRepositoryPort {
     public List<Task> findAllByDueDateIsBeforeAndNotificationSentFalse(Date threshold) {
         List<TaskEntity> entities = jpaTaskRepository.findAllByDueDateIsBeforeAndNotificationSentFalse(threshold);
         return entities.stream().map(TaskMapper::toDomain).toList();
+    }
+
+    @Override
+    public TaskAnalyticsSummary getTaskAnalyticsSummary() {
+        return jpaTaskRepository.getGlobalTaskAnalyticsSummary();
     }
 }
