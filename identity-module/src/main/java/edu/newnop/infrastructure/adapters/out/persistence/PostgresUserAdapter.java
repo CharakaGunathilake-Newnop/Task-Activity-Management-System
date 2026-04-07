@@ -1,9 +1,13 @@
 package edu.newnop.infrastructure.adapters.out.persistence;
 
 import edu.newnop.application.port.out.UserRepositoryPort;
+import edu.newnop.domain.dto.UserAnalyticsSummary;
 import edu.newnop.domain.model.User;
+import edu.newnop.domain.model.UserRole;
 import edu.newnop.infrastructure.adapters.out.persistence.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -43,7 +47,7 @@ public class PostgresUserAdapter implements UserRepositoryPort {
 
     @Override
     public boolean existsByUsername(String username) {
-        return false;
+        return jpaRepository.existsByName(username);
     }
 
     @Override
@@ -61,5 +65,20 @@ public class PostgresUserAdapter implements UserRepositoryPort {
     public List<User> findAllByIdIn(Long[] userIds) {
         List<UserEntity> entities = jpaRepository.findAllByIdIn(userIds);
         return entities.stream().map(UserMapper::toDomain).toList();
+    }
+
+    @Override
+    public Page<User> findAllUsersByRole(UserRole role, PageRequest pageRequest) {
+        return jpaRepository.findAllByRole(role, pageRequest).map(UserMapper::toDomain);
+    }
+
+    @Override
+    public Page<User> findAllUsersBySearch(String searchQuery, PageRequest pageRequest) {
+        return jpaRepository.findAllByRoleIsUserAndBySearch(searchQuery, pageRequest).map(UserMapper::toDomain);
+    }
+
+    @Override
+    public UserAnalyticsSummary getUserBreakDown() {
+        return jpaRepository.getUserAnalyticsSummary();
     }
 }
